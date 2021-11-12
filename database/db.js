@@ -35,14 +35,14 @@ async function connect(uri){
         console.log("Connection successful");
     }
     catch(err){
-        console.log("Connection with database unsuccessful.")
-        console.log(err);
+        console.log("Connection with database unsuccessful.")        
+        throw new Error(err)
     }
 }
 
 
 async function addMessage(dataToAdd, board){
-    try{
+    try{        
         // { text, delete_password } 
         // add created_on, bumped_on, reported, 
         dataToAdd['created_on'] = new Date();
@@ -75,6 +75,7 @@ async function addMessage(dataToAdd, board){
     catch(err){
         console.log("ERROR in adding message");
         console.log(err);
+        throw new Error(err);
     }
 }
 
@@ -88,24 +89,28 @@ async function addReply({text, delete_password, thread_id}, board){
 
         delete_password = await bcrypt.hash(delete_password, saltRounds);
         
+        const ourReply = {
+            text,
+            delete_password, 
+            created_on: new Date()
+        }
         ourThread.bumped_on = new Date();
-        ourThread.replies.push({
-            text, delete_password, created_on: new Date()
-        });
+        ourThread.replies.push(ourReply);
 
         await ourBoard.save();
+        return ourThread.replies[ourThread.replies.length - 1];
         
     }
     catch(err){
         console.log("ERROR in adding reply");
-        console.log(err);
+        throw new Error(err);
     }
 }
 
 
 async function getRecentThreads(board){
     try{
-        let results = Boards.findOne({board_name: board});
+        let results = await Boards.findOne({board_name: board});
         results.threads.sort((a, b) => {
             const aDate = new Date(a.bumped_on);
             const bDate = new Date(b.bumped_on);
@@ -115,7 +120,7 @@ async function getRecentThreads(board){
             return 0;
         });
 
-        let ourThreads = results.threads.slice(0, 11);
+        let ourThreads = results.threads.slice(0, 10);
 
         for(let i = 0 ; i < ourThreads.length; i++){
             ourThreads[i].replies.sort((a, b)=>{
@@ -134,10 +139,78 @@ async function getRecentThreads(board){
     }
     catch(err){
         console.log("ERROR in fetching recent threads")
-        console.log(err);
+        throw new Error(err);
     }
 }
 
+async function deleteThread(thread_id, password, board_name){
+    try{
+        let board = await Boards.findOne({ board_name });
+        let thread = board.threads.id(thread_id);
+        if(!thread){
+            throw new Error('Thread not found');
+        }
+        let matched = await bcrypt.compare(password, thread.delete_password);
+
+        if (matched) {
+            thread.remove();
+            board.save();
+            return 'Done';
+        }
+        throw new Error('Incorrect password')
+    }
+    catch(err){
+        console.log("Error while deleting thread");
+        throw new Error(err.message);
+    }
+}
+
+async function getSingleThread(thread_id, board_name){
+    try{
+        let board = await Boards.findOne({ board_name });
+        let ourThread = board.threads.id(thread_id);
+
+        if (!ourThread) {
+            throw new Error('Thread not found');
+        }
+        
+        return ourThread;
+    }catch(err){
+        console.log("Error in getting a single thread");
+        throw new Error(err.message);
+    }    
+}
+
+async function deleteReply(thread_id, reply_id, delete_password, board_name){
+    try{
+        let targetBoard = await Boards.findOne({ board_name });
+        let targetThread = targetBoard.threads.id(thread_id);
+
+        if (!targetThread) {
+            throw new Error('Thread not found');
+        }
+
+        let targetReply = targetThread.replies.id(reply_id);
+
+        if (!targetReply) {
+            throw new Error('Reply not found');
+        }
+
+        let password_matched = await bcrypt.compare(delete_password, targetReply.delete_password);
+
+        if (!password_matched) {
+            throw new Error('Incorrect password');
+        }
+
+        targetReply.remove();
+
+        await targetBoard.save();
+        return 'DONE';
+    } catch(err) {
+        console.log("Error in getting a single thread");
+        throw new Error(err.message);
+    }
+}
 
 async function getAllThreads(board){
     return await Boards.findOne({board_name: board});
@@ -148,5 +221,8 @@ module.exports = {
     addReply,
     connect,
     getRecentThreads,
-    getAllThreads
+    getAllThreads,
+    deleteThread,
+    getSingleThread,
+    deleteReply
 }
