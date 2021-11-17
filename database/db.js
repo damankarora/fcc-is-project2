@@ -73,8 +73,8 @@ async function addMessage(dataToAdd, board){
         return foundBoard.threads[foundBoard.threads.length - 1];
     }
     catch(err){
-        console.log("ERROR in adding message");
-        console.log(err);
+        
+        
         throw new Error(err);
     }
 }
@@ -102,7 +102,7 @@ async function addReply({text, delete_password, thread_id}, board){
         
     }
     catch(err){
-        console.log("ERROR in adding reply");
+        
         throw new Error(err);
     }
 }
@@ -138,7 +138,7 @@ async function getRecentThreads(board){
         return ourThreads;        
     }
     catch(err){
-        console.log("ERROR in fetching recent threads")
+        
         throw new Error(err);
     }
 }
@@ -160,7 +160,7 @@ async function deleteThread(thread_id, password, board_name){
         throw new Error('Incorrect password')
     }
     catch(err){
-        console.log("Error while deleting thread");
+        
         throw new Error(err.message);
     }
 }
@@ -176,7 +176,7 @@ async function getSingleThread(thread_id, board_name){
         
         return ourThread;
     }catch(err){
-        console.log("Error in getting a single thread");
+        
         throw new Error(err.message);
     }    
 }
@@ -202,18 +202,59 @@ async function deleteReply(thread_id, reply_id, delete_password, board_name){
             throw new Error('Incorrect password');
         }
 
-        targetReply.remove();
+        targetReply.text='[deleted]';
 
         await targetBoard.save();
         return 'DONE';
     } catch(err) {
-        console.log("Error in getting a single thread");
+        
         throw new Error(err.message);
     }
 }
 
 async function getAllThreads(board){
     return await Boards.findOne({board_name: board});
+}
+
+
+async function reportThread(thread_id, board_name){
+    try{
+        let targetBoard = await Boards.findOne({board_name});
+        let targetThread = targetBoard.threads.id(thread_id);
+        if (!targetThread) {
+            throw new Error('Thread not found');
+        }
+
+        targetThread.reported = true;
+        await targetBoard.save();
+        return 'success';
+    }catch(err){
+        
+        throw new Error(err.message);
+    }
+}
+
+async function reportReply(thread_id, reply_id, board_name){
+    try{
+        let targetBoard = await Boards.findOne({board_name});
+        let targetThread = targetBoard.threads.id(thread_id);
+        if (!targetThread) {
+            throw new Error('Thread not found');
+        }
+
+        let targetReply = targetThread.replies.id(reply_id);
+        if (!targetReply) {
+            throw new Error('Reply not found');
+        }
+        
+        targetReply.reported = true;
+
+        await targetBoard.save();
+        return 'success';
+    }catch(err){
+        
+        throw new Error(err.message);
+    }
 }
 
 module.exports = {
@@ -224,5 +265,7 @@ module.exports = {
     getAllThreads,
     deleteThread,
     getSingleThread,
-    deleteReply
+    deleteReply,
+    reportThread,
+    reportReply
 }

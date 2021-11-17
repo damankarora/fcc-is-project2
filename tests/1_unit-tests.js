@@ -129,5 +129,74 @@ suite('Testing database methods', function (){
             let results = await db.deleteReply(_id, reply_id, '1234', bName)
             assert.equal(results, 'DONE');
         })
+    });
+
+    suite('Reporting threads', ()=>{
+        let _id = null;
+        
+
+        this.beforeAll(async () => {
+            let threadResults = await db.addMessage({ text: 'Hello1', delete_password: '1234' }, bName);
+            _id = threadResults._id;
+            
+        });
+
+        test('When incorrect thread_id is given', (done)=>{
+            db.reportThread('incorrect', bName)
+            .then(()=>{
+                fail('Promise resolved')
+            })
+            .catch((err)=>{
+                assert.deepEqual(err.message, 'Thread not found')
+                done()
+            })
+        })
+
+        test('When correct thread_id is given', async ()=>{
+            let result = await db.reportThread(_id, bName);
+            assert.equal(result, 'success');
+        })
     })
+
+    suite('Reporting threads', () => {
+        let _id = null;
+        let reply_id = null;
+
+        this.beforeAll(async () => {
+            let threadResults = await db.addMessage({ text: 'Hello1', delete_password: '1234' }, bName);
+            _id = threadResults._id;
+            let replyResult = await db.addReply({ text: 'Reply1', delete_password: '1234', thread_id: _id }, bName);
+            reply_id = replyResult._id;
+        });
+
+        test('When incorrect thread_id is given', (done) => {
+            db.reportReply('1234', reply_id, bName)
+                .then(() => {
+                    fail('Promise resolved')
+                })
+                .catch((err) => {
+                    assert.deepEqual(err.message, 'Thread not found')
+                    done();
+                })
+        })
+
+        test('When incorrect reply_id is given', (done) => {
+            db.reportReply(_id, '1234', bName)
+                .then(() => {
+                    fail('Promise resolved')
+                })
+                .catch((err) => {
+                    assert.deepEqual(err.message, 'Reply not found');
+                    done();
+                })
+        })
+
+        test('When correct thread_id and report_id is given', async () => {
+            let result = await db.reportReply(_id, reply_id, bName);
+            assert.equal(result, 'success');
+        })
+    })
+
+
+
 })
