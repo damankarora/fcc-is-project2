@@ -1,4 +1,3 @@
-const { expect } = require('chai');
 const chai = require('chai');
 const assert = chai.assert;
 require('dotenv').config();
@@ -13,6 +12,11 @@ suite('Testing database methods', function (){
     this.beforeAll(async ()=>{
         await db.connect(process.env.MONGO);
     });
+
+    // Deletes the board used for testing
+    this.afterAll(async ()=>{
+        await db.deleteBoard(bName);
+    })
 
     test('creating a message',async () => {        
 

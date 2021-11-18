@@ -257,6 +257,16 @@ async function reportReply(thread_id, reply_id, board_name){
     }
 }
 
+async function deleteBoard(board_name){
+    try{
+        await Boards.deleteOne({board_name});
+        return 'success'
+    }
+    catch(err){
+        throw new Error(err);
+    }
+}
+
 module.exports = {
     addMessage,
     addReply,
@@ -267,5 +277,6 @@ module.exports = {
     getSingleThread,
     deleteReply,
     reportThread,
-    reportReply
+    reportReply,
+    deleteBoard
 }
