@@ -110,7 +110,7 @@ async function addReply({text, delete_password, thread_id}, board){
 
 async function getRecentThreads(board){
     try{
-        let results = await Boards.findOne({board_name: board});
+        let results = await Boards.findOne({board_name: board}, '-threads.delete_password -threads.reported -threads.replies.delete_password -threads.replies.reported');
         results.threads.sort((a, b) => {
             const aDate = new Date(a.bumped_on);
             const bDate = new Date(b.bumped_on);
@@ -131,7 +131,7 @@ async function getRecentThreads(board){
                 if (aDate > bDate) return 1;
                 return 0;
             })
-
+            
             ourThreads[i].replies = ourThreads[i].replies.slice(0, 3);
         }
 
@@ -167,7 +167,7 @@ async function deleteThread(thread_id, password, board_name){
 
 async function getSingleThread(thread_id, board_name){
     try{
-        let board = await Boards.findOne({ board_name });
+        let board = await Boards.findOne({ board_name }, '-threads.delete_password -threads.reported -threads.replies.delete_password -threads.replies.reported');
         let ourThread = board.threads.id(thread_id);
 
         if (!ourThread) {

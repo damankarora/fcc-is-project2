@@ -45,7 +45,9 @@ suite('Testing database methods', function (){
         let results = await db.getRecentThreads(bName);
         assert.isArray(results)
         assert.isAtMost(results.length, 10)
-        assert.isAtMost(results[0].replies.length, 3);
+        assert.isAtMost(results[0].replies.length, 3);                 
+        assert.isUndefined(results[0].delete_password)
+
     })
 
     suite('Deleting a thread', function(){
@@ -84,6 +86,8 @@ suite('Testing database methods', function (){
         test('When correct thread_id is given',async ()=>{
             let results = await db.getSingleThread(_id, bName);
             assert.deepEqual(results._id, _id);
+            assert.isUndefined(results.delete_password);
+            assert.isUndefined(results.reported);
         });
 
         test('When incorrect thread_id is given', (done)=>{
