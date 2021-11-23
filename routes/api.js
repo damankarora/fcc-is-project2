@@ -109,7 +109,7 @@ module.exports = function (app) {
       await db.deleteReply(thread_id, reply_id, delete_password, board_name);
       return res.send("success");
     }catch(err){
-      return res.status(503).json("Something went wrong.");
+      return res.status(403).send("incorrect password");
     }
   })
   .put(async function (req, res){
@@ -125,8 +125,8 @@ module.exports = function (app) {
       await db.reportReply(thread_id, reply_id, board_name);
       return res.send("success");
     }
-    catch(err){
-      return res.status(500).json({err: "Something went wrong."});
+    catch(err){      
+      return res.status(503).json({err: "Something went wrong."});
     }
   });
 
