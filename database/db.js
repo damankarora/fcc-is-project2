@@ -46,7 +46,7 @@ async function addMessage(dataToAdd, board){
         // { text, delete_password } 
         // add created_on, bumped_on, reported, 
         dataToAdd['created_on'] = new Date();
-        dataToAdd['bumped_on'] = new Date();
+        dataToAdd['bumped_on'] = dataToAdd['created_on'];
         dataToAdd['reported'] = false;
         dataToAdd['replies'] = [];
 

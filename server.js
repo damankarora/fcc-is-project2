@@ -25,7 +25,9 @@ app.use(helmet.frameguard({
 
 // Disable DNS prefetching.
 
-app.use(helmet.dnsPrefetchControl())
+app.use(helmet.dnsPrefetchControl({
+  allow: false
+}))
 
 // Adding Refferer-Policy header for our site only.
 
